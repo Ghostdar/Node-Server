@@ -1,14 +1,18 @@
 'use strict';
 import Koa from 'koa'
-import log from './utils/log'
-import middleware from './middleware'
-import { connectDatabase } from './utils/mongodb'
 import convert from 'koa-convert'
 import koabody from 'koa-body'
 import router from './api'
 import json from 'koa-json'
-import config from './configs/env.config'
 import bodyParser from 'koa-bodyparser'
+import session from 'koa-session'
+
+import config from './configs/env.config'
+import log from './utils/log'
+import middleware from './middleware'
+import { connectDatabase } from './utils/mongodb'
+import passport from './configs/passport.config'
+
 const port = config.port
 const app = new Koa()
 
@@ -22,9 +26,13 @@ app.use(async (ctx, next) => {
 
 app.use(middleware())
 
-
-app.use(bodyParser());
-app.use(json());
+app.proxy = true    
+app.keys = ['123456']
+app.use(session({key: "SESSIONID"},app))
+app.use(bodyParser())
+app.use(json())
+app.use(passport.initialize())
+app.use(passport.session())
 app.use(router())
 app.use(ctx => ctx.status = 404)
 
